@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0D6EB7F0-F53D-4525-9703-B04C5A4B685B}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>DumpIt</RootNamespace>
+    <AssemblyName>DumpIt</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommandLine, Version=2.3.0.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.3.0\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Containers, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Containers.0.13.0-alpha\lib\net45\DiscUtils.Containers.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Core, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Core.0.13.0-alpha\lib\net45\DiscUtils.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Dmg, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Dmg.0.13.0-alpha\lib\net45\DiscUtils.Dmg.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Iso9660, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Iso9660.0.13.0-alpha\lib\net45\DiscUtils.Iso9660.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Net, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Net.0.13.0-alpha\lib\net45\DiscUtils.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.OpticalDiscSharing, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.OpticalDiscSharing.0.13.0-alpha\lib\net45\DiscUtils.OpticalDiscSharing.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Streams, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Streams.0.13.0-alpha\lib\net45\DiscUtils.Streams.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Vhd, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Vhd.0.13.0-alpha\lib\net45\DiscUtils.Vhd.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Vhdx, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Vhdx.0.13.0-alpha\lib\net45\DiscUtils.Vhdx.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Vmdk, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Vmdk.0.13.0-alpha\lib\net45\DiscUtils.Vmdk.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Wim, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Wim.0.13.0-alpha\lib\net45\DiscUtils.Wim.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Xva, Version=0.13.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscUtils.Xva.0.13.0-alpha\lib\net45\DiscUtils.Xva.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Console, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Console.4.0.0\lib\net46\System.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Reflection.TypeExtensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.TypeExtensions.4.1.0\lib\net46\System.Reflection.TypeExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Constants.cs" />
+    <Compile Include="DeviceStream.cs" />
+    <Compile Include="EPartitionStream.cs" />
+    <Compile Include="GetDiskSize.cs" />
+    <Compile Include="Logging.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
