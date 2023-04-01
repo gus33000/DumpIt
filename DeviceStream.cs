@@ -31,7 +31,7 @@ using System.Runtime.InteropServices;
 
 namespace DumpIt
 {
-    public class DeviceStream : Stream
+    public partial class DeviceStream : Stream, IDisposable
     {
         private const uint GENERIC_READ = 0x80000000;
         private const uint GENERIC_WRITE = 0x40000000;
@@ -103,30 +103,32 @@ namespace DumpIt
             internal byte[] Data;
         }
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+        [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+        private static partial IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, int nNumberOfBytesToRead, ref int lpNumberOfBytesRead, IntPtr lpOverlapped);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool ReadFile(IntPtr hFile, byte[] lpBuffer, int nNumberOfBytesToRead, ref int lpNumberOfBytesRead, IntPtr lpOverlapped);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool WriteFile(IntPtr hFile, byte[] lpBuffer, int nNumberOfBytesToWrite, ref int lpNumberOfBytesWritten, IntPtr lpOverlapped);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool WriteFile(IntPtr hFile, byte[] lpBuffer, int nNumberOfBytesToWrite, ref int lpNumberOfBytesWritten, IntPtr lpOverlapped);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern uint DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, IntPtr lpInBuffer, uint nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, ref uint lpBytesReturned, IntPtr lpOverlapped);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        private static partial uint DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, IntPtr lpInBuffer, uint nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, ref uint lpBytesReturned, IntPtr lpOverlapped);
 
-        [DllImport("kernel32.dll")]
-        private static extern bool SetFilePointerEx(SafeFileHandle hFile, long liDistanceToMove, out long lpNewFilePointer, uint dwMoveMethod);
+        [LibraryImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetFilePointerEx(SafeFileHandle hFile, long liDistanceToMove, out long lpNewFilePointer, uint dwMoveMethod);
 
         private SafeFileHandle handleValue = null;
         private long _Position = 0;
         private readonly long _length = 0;
-        private readonly uint _sectorsize = 0;
         private readonly bool _canWrite = false;
         private readonly bool _canRead = false;
         private bool disposed = false;
 
-        public uint SectorSize => _sectorsize;
+        public uint SectorSize { get; } = 0;
 
         private static uint CTL_CODE(uint DeviceType, uint Function, uint Method, uint Access)
         {
@@ -137,7 +139,7 @@ namespace DumpIt
         {
             if (string.IsNullOrEmpty(device))
             {
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
             }
 
             uint fileAccess = 0;
@@ -158,9 +160,9 @@ namespace DumpIt
                     break;
             }
 
-            string devicePath = @"\\.\PhysicalDrive" + device.ToLower().Replace(@"\\.\physicaldrive", "");
+            string devicePath = @"\\.\PhysicalDrive" + device.Replace(@"\\.\PhysicalDrive", "", StringComparison.InvariantCultureIgnoreCase);
 
-            (_length, _sectorsize) = GetDiskProperties(devicePath);
+            (_length, SectorSize) = GetDiskProperties(devicePath);
 
             IntPtr ptr = CreateFile(devicePath, fileAccess, 0, IntPtr.Zero, OPEN_EXISTING, FILE_ATTRIBUTE_DEVICE | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH, IntPtr.Zero);
             handleValue = new SafeFileHandle(ptr, true);
@@ -233,15 +235,15 @@ namespace DumpIt
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (count % _sectorsize != 0)
+            if (count % SectorSize != 0)
             {
-                long extrastart = Position % _sectorsize;
+                long extrastart = Position % SectorSize;
                 if (extrastart != 0)
                 {
                     _ = Seek(-extrastart, SeekOrigin.Current);
                 }
 
-                long addedcount = _sectorsize - (count % _sectorsize);
+                long addedcount = SectorSize - (count % SectorSize);
                 long ncount = count + addedcount;
                 byte[] tmpbuffer = new byte[extrastart + buffer.Length + addedcount];
                 buffer.CopyTo(tmpbuffer, extrastart);
@@ -356,14 +358,14 @@ namespace DumpIt
             base.Close();
         }
 
-        private new void Dispose()
+        public new void Dispose()
         {
-            Dispose(true);
             base.Dispose();
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        private new void Dispose(bool disposing)
+        protected new void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.
             if (!disposed)

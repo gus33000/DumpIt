@@ -27,153 +27,156 @@ namespace DumpIt
 {
     internal static class ByteOperations
     {
-        internal static string ReadAsciiString(byte[] ByteArray, UInt32 Offset, UInt32 Length)
+        internal static string ReadAsciiString(byte[] ByteArray, uint Offset, uint Length)
         {
             byte[] Bytes = new byte[Length];
             Buffer.BlockCopy(ByteArray, (int)Offset, Bytes, 0, (int)Length);
             return System.Text.Encoding.ASCII.GetString(Bytes);
         }
 
-        internal static string ReadUnicodeString(byte[] ByteArray, UInt32 Offset, UInt32 Length)
+        internal static string ReadUnicodeString(byte[] ByteArray, uint Offset, uint Length)
         {
             byte[] Bytes = new byte[Length];
             Buffer.BlockCopy(ByteArray, (int)Offset, Bytes, 0, (int)Length);
             return System.Text.Encoding.Unicode.GetString(Bytes);
         }
 
-        internal static void WriteAsciiString(byte[] ByteArray, UInt32 Offset, string Text, UInt32? MaxBufferLength = null)
+        internal static void WriteAsciiString(byte[] ByteArray, uint Offset, string Text, uint? MaxBufferLength = null)
         {
             if (MaxBufferLength != null)
+            {
                 Array.Clear(ByteArray, (int)Offset, (int)MaxBufferLength);
+            }
 
             byte[] TextBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(Text);
             int WriteLength = TextBytes.Length;
             if (WriteLength > MaxBufferLength)
+            {
                 WriteLength = (int)MaxBufferLength;
+            }
 
             Buffer.BlockCopy(TextBytes, 0, ByteArray, (int)Offset, WriteLength);
         }
 
-        internal static void WriteUnicodeString(byte[] ByteArray, UInt32 Offset, string Text, UInt32? MaxBufferLength = null)
+        internal static void WriteUnicodeString(byte[] ByteArray, uint Offset, string Text, uint? MaxBufferLength = null)
         {
             if (MaxBufferLength != null)
+            {
                 Array.Clear(ByteArray, (int)Offset, (int)MaxBufferLength);
+            }
 
             byte[] TextBytes = System.Text.UnicodeEncoding.Unicode.GetBytes(Text);
             int WriteLength = TextBytes.Length;
             if (WriteLength > MaxBufferLength)
+            {
                 WriteLength = (int)MaxBufferLength;
+            }
 
             Buffer.BlockCopy(TextBytes, 0, ByteArray, (int)Offset, WriteLength);
         }
 
-        internal static UInt32 ReadUInt32(byte[] ByteArray, UInt32 Offset)
+        internal static uint ReadUInt32(byte[] ByteArray, uint Offset)
         {
             return BitConverter.ToUInt32(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt32(byte[] ByteArray, UInt32 Offset, UInt32 Value)
+        internal static void WriteUInt32(byte[] ByteArray, uint Offset, uint Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 4);
         }
 
-        internal static Int32 ReadInt32(byte[] ByteArray, UInt32 Offset)
+        internal static int ReadInt32(byte[] ByteArray, uint Offset)
         {
             return BitConverter.ToInt32(ByteArray, (int)Offset);
         }
 
-        internal static void WriteInt32(byte[] ByteArray, UInt32 Offset, Int32 Value)
+        internal static void WriteInt32(byte[] ByteArray, uint Offset, int Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 4);
         }
 
-        internal static UInt16 ReadUInt16(byte[] ByteArray, UInt32 Offset)
+        internal static ushort ReadUInt16(byte[] ByteArray, uint Offset)
         {
             return BitConverter.ToUInt16(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt16(byte[] ByteArray, UInt32 Offset, UInt16 Value)
+        internal static void WriteUInt16(byte[] ByteArray, uint Offset, ushort Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 2);
         }
 
-        internal static Int16 ReadInt16(byte[] ByteArray, UInt32 Offset)
+        internal static short ReadInt16(byte[] ByteArray, uint Offset)
         {
             return BitConverter.ToInt16(ByteArray, (int)Offset);
         }
 
-        internal static void WriteInt16(byte[] ByteArray, UInt32 Offset, Int16 Value)
+        internal static void WriteInt16(byte[] ByteArray, uint Offset, short Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 2);
         }
 
-        internal static byte ReadUInt8(byte[] ByteArray, UInt32 Offset)
+        internal static byte ReadUInt8(byte[] ByteArray, uint Offset)
         {
             return ByteArray[Offset];
         }
 
-        internal static void WriteUInt8(byte[] ByteArray, UInt32 Offset, byte Value)
+        internal static void WriteUInt8(byte[] ByteArray, uint Offset, byte Value)
         {
             ByteArray[Offset] = Value;
         }
 
-        internal static UInt32 ReadUInt24(byte[] ByteArray, UInt32 Offset)
+        internal static uint ReadUInt24(byte[] ByteArray, uint Offset)
         {
-            return (UInt32)(ByteArray[Offset] + (ByteArray[Offset + 1] << 8) + (ByteArray[Offset + 2] << 16));
+            return (uint)(ByteArray[Offset] + (ByteArray[Offset + 1] << 8) + (ByteArray[Offset + 2] << 16));
         }
 
-        internal static void WriteUInt24(byte[] ByteArray, UInt32 Offset, UInt32 Value)
+        internal static void WriteUInt24(byte[] ByteArray, uint Offset, uint Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 3);
         }
 
-        internal static UInt64 ReadUInt64(byte[] ByteArray, UInt32 Offset)
+        internal static ulong ReadUInt64(byte[] ByteArray, uint Offset)
         {
             return BitConverter.ToUInt64(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt64(byte[] ByteArray, UInt32 Offset, UInt64 Value)
+        internal static void WriteUInt64(byte[] ByteArray, uint Offset, ulong Value)
         {
             System.Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 8);
         }
 
-        internal static Guid ReadGuid(byte[] ByteArray, UInt32 Offset)
+        internal static Guid ReadGuid(byte[] ByteArray, uint Offset)
         {
             byte[] GuidBuffer = new byte[0x10];
             Buffer.BlockCopy(ByteArray, (int)Offset, GuidBuffer, 0, 0x10);
             return new Guid(GuidBuffer);
         }
 
-        internal static void WriteGuid(byte[] ByteArray, UInt32 Offset, Guid Value)
+        internal static void WriteGuid(byte[] ByteArray, uint Offset, Guid Value)
         {
             Buffer.BlockCopy(Value.ToByteArray(), 0, ByteArray, (int)Offset, 0x10);
         }
 
-        internal static UInt32 Align(UInt32 Base, UInt32 Offset, UInt32 Alignment)
+        internal static uint Align(uint Base, uint Offset, uint Alignment)
         {
-            if (((Offset - Base) % Alignment) == 0)
-                return Offset;
-            else
-                return ((((Offset - Base) / Alignment) + 1) * Alignment) + Base;
+            return ((Offset - Base) % Alignment) == 0 ? Offset : ((((Offset - Base) / Alignment) + 1) * Alignment) + Base;
         }
 
-        internal static UInt32? FindPatternInFile(string FileName, byte[] Pattern, byte[] Mask, out byte[] OutPattern)
+        internal static uint? FindPatternInFile(string FileName, byte[] Pattern, byte[] Mask, out byte[] OutPattern)
         {
             // The mask is optional.
             // In the mask 0x00 means the value must match, and 0xFF means that this position is a wildcard.
 
-            UInt32? Result = null;
+            uint? Result = null;
 
-            FileStream Stream = new FileStream(FileName, FileMode.Open, FileAccess.Read);
+            FileStream Stream = new(FileName, FileMode.Open, FileAccess.Read);
 
             byte[] Buffer = new byte[0x10000 + Pattern.Length - 1];
-            UInt32 BufferReadPosition = 0; // Position in buffer where file-chunk is being read.
-            UInt32 BytesInBuffer = 0;
-            UInt32 BytesRead;
-            UInt32 SearchPositionFile = 0;
-            UInt32 SearchPositionBuffer = 0;
-            UInt32 BufferFileOffset = 0; // Offset in file where data from buffer is located.
-            bool Match = false;
+            uint BytesInBuffer = 0;
+            uint BytesRead;
+            uint SearchPositionFile = 0;
+            uint SearchPositionBuffer = 0;
+            uint BufferFileOffset = 0; // Offset in file where data from buffer is located.
             int i;
 
             OutPattern = null;
@@ -187,24 +190,26 @@ namespace DumpIt
                     {
                         System.Buffer.BlockCopy(Buffer, (int)SearchPositionBuffer, Buffer, 0, (int)(BytesInBuffer - SearchPositionBuffer));
                     }
-                    BufferReadPosition = BytesInBuffer - SearchPositionBuffer;
+                    uint BufferReadPosition = BytesInBuffer - SearchPositionBuffer;
                     BytesInBuffer -= SearchPositionBuffer;
                     BufferFileOffset += SearchPositionBuffer;
                     SearchPositionBuffer = 0;
 
-                    BytesRead = (UInt32)Stream.Read(Buffer, (int)BufferReadPosition, Buffer.Length - (int)BufferReadPosition);
+                    BytesRead = (uint)Stream.Read(Buffer, (int)BufferReadPosition, Buffer.Length - (int)BufferReadPosition);
                     BytesInBuffer += BytesRead;
                 }
 
-                Match = true;
+                bool Match = true;
                 for (i = 0; i < Pattern.Length; i++)
                 {
                     if (Buffer[SearchPositionBuffer + i] != Pattern[i])
+                    {
                         if ((Mask == null) || (Mask[i] == 0))
                         {
                             Match = false;
                             break;
                         }
+                    }
                 }
 
                 if (Match)
@@ -225,22 +230,22 @@ namespace DumpIt
             return Result;
         }
 
-        internal static UInt32? FindAscii(byte[] SourceBuffer, string Pattern)
+        internal static uint? FindAscii(byte[] SourceBuffer, string Pattern)
         {
-            return FindPattern(SourceBuffer, System.Text.ASCIIEncoding.ASCII.GetBytes((string)Pattern), null, null);
+            return FindPattern(SourceBuffer, System.Text.ASCIIEncoding.ASCII.GetBytes(Pattern), null, null);
         }
 
-        internal static UInt32? FindUnicode(byte[] SourceBuffer, string Pattern)
+        internal static uint? FindUnicode(byte[] SourceBuffer, string Pattern)
         {
-            return FindPattern(SourceBuffer, System.Text.UnicodeEncoding.Unicode.GetBytes((string)Pattern), null, null);
+            return FindPattern(SourceBuffer, System.Text.UnicodeEncoding.Unicode.GetBytes(Pattern), null, null);
         }
 
-        internal static UInt32? FindUint(byte[] SourceBuffer, UInt32 Pattern)
+        internal static uint? FindUint(byte[] SourceBuffer, uint Pattern)
         {
-            return FindPattern(SourceBuffer, BitConverter.GetBytes((UInt32)Pattern), null, null);
+            return FindPattern(SourceBuffer, BitConverter.GetBytes(Pattern), null, null);
         }
 
-        internal static UInt32? FindPattern(byte[] SourceBuffer, byte[] Pattern, byte[] Mask, byte[] OutPattern)
+        internal static uint? FindPattern(byte[] SourceBuffer, byte[] Pattern, byte[] Mask, byte[] OutPattern)
         {
             return FindPattern(SourceBuffer, 0, null, Pattern, Mask, OutPattern);
         }
@@ -250,28 +255,29 @@ namespace DumpIt
             return System.Collections.StructuralComparisons.StructuralEqualityComparer.Equals(Array1, Array2);
         }
 
-        internal static UInt32? FindPattern(byte[] SourceBuffer, uint SourceOffset, uint? SourceSize, byte[] Pattern, byte[] Mask, byte[] OutPattern)
+        internal static uint? FindPattern(byte[] SourceBuffer, uint SourceOffset, uint? SourceSize, byte[] Pattern, byte[] Mask, byte[] OutPattern)
         {
             // The mask is optional.
             // In the mask 0x00 means the value must match, and 0xFF means that this position is a wildcard.
 
-            UInt32? Result = null;
+            uint? Result = null;
 
-            UInt32 SearchPosition = SourceOffset;
-            bool Match = false;
+            uint SearchPosition = SourceOffset;
             int i;
 
             while ((SearchPosition <= (SourceBuffer.Length - Pattern.Length)) && ((SourceSize == null) || (SearchPosition <= (SourceOffset + SourceSize - Pattern.Length))))
             {
-                Match = true;
+                bool Match = true;
                 for (i = 0; i < Pattern.Length; i++)
                 {
                     if (SourceBuffer[SearchPosition + i] != Pattern[i])
+                    {
                         if ((Mask == null) || (Mask[i] == 0))
                         {
                             Match = false;
                             break;
                         }
+                    }
                 }
 
                 if (Match)
@@ -279,7 +285,10 @@ namespace DumpIt
                     Result = SearchPosition;
 
                     if (OutPattern != null)
+                    {
                         System.Buffer.BlockCopy(SourceBuffer, (int)SearchPosition, OutPattern, 0, Pattern.Length);
+                    }
+
                     break;
                 }
 
@@ -289,27 +298,31 @@ namespace DumpIt
             return Result;
         }
 
-        internal static byte CalculateChecksum8(byte[] Buffer, UInt32 Offset, UInt32 Size)
+        internal static byte CalculateChecksum8(byte[] Buffer, uint Offset, uint Size)
         {
             byte Checksum = 0;
 
-            for (UInt32 i = Offset; i < (Offset + Size); i++)
+            for (uint i = Offset; i < (Offset + Size); i++)
+            {
                 Checksum += Buffer[i];
+            }
 
             return (byte)(0x100 - Checksum);
         }
 
-        internal static UInt16 CalculateChecksum16(byte[] Buffer, UInt32 Offset, UInt32 Size)
+        internal static ushort CalculateChecksum16(byte[] Buffer, uint Offset, uint Size)
         {
-            UInt16 Checksum = 0;
+            ushort Checksum = 0;
 
-            for (UInt32 i = Offset; i < (Offset + Size - 1); i += 2)
+            for (uint i = Offset; i < (Offset + Size - 1); i += 2)
+            {
                 Checksum += BitConverter.ToUInt16(Buffer, (int)i);
+            }
 
-            return (UInt16)(0x10000 - Checksum);
+            return (ushort)(0x10000 - Checksum);
         }
 
-        private static UInt32[] CRC32Table = new UInt32[] {
+        private static readonly uint[] CRC32Table = new uint[] {
             0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
             0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
             0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
@@ -355,17 +368,19 @@ namespace DumpIt
             0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
         };
 
-        internal static UInt32 CRC32(byte[] Input, UInt32 Offset, UInt32 Length)
+        internal static uint CRC32(byte[] Input, uint Offset, uint Length)
         {
             if ((Input == null) || ((Offset + Length) > Input.Length))
+            {
                 throw new ArgumentException();
+            }
 
             unchecked
             {
                 uint crc = (uint)(((uint)0) ^ (-1));
-                for (var i = Offset; i < (Offset + Length); i++)
+                for (uint i = Offset; i < (Offset + Length); i++)
                 {
-                    crc = (crc >> 8) ^ CRC32Table[ (crc ^ Input[i]) & 0xFF ];
+                    crc = (crc >> 8) ^ CRC32Table[(crc ^ Input[i]) & 0xFF];
                 }
                 crc = (uint)(crc ^ (-1));
 

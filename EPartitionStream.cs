@@ -22,24 +22,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace DumpIt
 {
-    internal class EPartitionStream : Stream
+    internal class EPartitionStream : Stream, IDisposable
     {
         private Stream innerstream;
         private readonly string[] excluded;
-        private readonly GPTPartition[] partitions;
+        private readonly List<GPTPartition> partitions;
         private readonly bool IS_UNLOCKED = false;
+        private readonly uint SectorSize;
 
         private bool disposed;
 
-        public EPartitionStream(Stream stream, string[] partitionstoexclude)
+        public EPartitionStream(Stream stream, uint SectorSize, string[] partitionstoexclude)
         {
+            this.SectorSize = SectorSize;
             innerstream = stream;
             excluded = partitionstoexclude;
-            partitions = GetPartsFromGPT(this);
+            partitions = GetPartsFromGPT(this, SectorSize);
 
             if (partitions.Any(x => x.Name == "IS_UNLOCKED"))
             {
@@ -77,18 +78,18 @@ namespace DumpIt
                 // The partition is excluded.
                 if (excluded.Any(x => x.ToLower() == partition.Name.ToLower()))
                 {
-                    if (readingend < partition.FirstLBA)
+                    if (readingend < (partition.FirstSector * SectorSize))
                     {
                         continue;
                     }
 
-                    if (readingstart > partition.LastLBA)
+                    if (readingstart > (partition.LastSector * SectorSize))
                     {
                         continue;
                     }
 
                     // We read inside the partition
-                    if (readingstart >= partition.FirstLBA && readingend <= partition.LastLBA)
+                    if (readingstart >= (partition.FirstSector * SectorSize) && readingend <= (partition.LastSector * SectorSize))
                     {
                         for (int i = offset; i < count; i++)
                         {
@@ -99,9 +100,9 @@ namespace DumpIt
                     }
 
                     // We read beyond the partition in every way
-                    if (readingstart < partition.FirstLBA && readingend > partition.LastLBA)
+                    if (readingstart < (partition.FirstSector * SectorSize) && readingend > (partition.LastSector * SectorSize))
                     {
-                        for (int i = (int)partition.FirstLBA - (int)readingstart + offset;
+                        for (int i = (int)(partition.FirstSector * SectorSize) - (int)readingstart + offset;
                             i < (int)(readingend - readingstart);
                             i++)
                         {
@@ -110,9 +111,9 @@ namespace DumpIt
                     }
 
                     // We read from inside the partition to beyond the partition.
-                    if (readingstart >= partition.FirstLBA && readingstart <= partition.LastLBA && readingend > partition.LastLBA)
+                    if (readingstart >= (partition.FirstSector * SectorSize) && readingstart <= (partition.LastSector * SectorSize) && readingend > (partition.LastSector * SectorSize))
                     {
-                        int bytecounttoremoveatthestart = (int)(partition.LastLBA - readingstart);
+                        int bytecounttoremoveatthestart = (int)((partition.LastSector * SectorSize) - readingstart);
                         for (int i = offset; i < offset + bytecounttoremoveatthestart; i++)
                         {
                             buffer[i] = 0;
@@ -120,9 +121,9 @@ namespace DumpIt
                     }
 
                     // We read from outside the partition to inside the partition and no partition before is excluded.
-                    if (readingstart < partition.FirstLBA && readingend <= partition.LastLBA && readingend >= partition.FirstLBA)
+                    if (readingstart < (partition.FirstSector * SectorSize) && readingend <= (partition.LastSector * SectorSize) && readingend >= (partition.FirstSector * SectorSize))
                     {
-                        int bytecounttoremoveattheend = (int)(readingend - partition.FirstLBA);
+                        int bytecounttoremoveattheend = (int)(readingend - (partition.FirstSector * SectorSize));
                         for (int i = count - bytecounttoremoveattheend; i < count; i++)
                         {
                             buffer[i] = 0;
@@ -149,82 +150,14 @@ namespace DumpIt
             innerstream.Write(buffer, offset, count);
         }
 
-        public static GPTPartition[] GetPartsFromGPT(Stream ds)
+        public static List<GPTPartition> GetPartsFromGPT(Stream stream, uint SectorSize)
         {
-            string GPTSignature = "EFI PART";
-            byte[] partitionArray = null;
-            _ = ds.Seek(0, SeekOrigin.Begin);
-            byte[] sector = new byte[Constants.SectorSize]; // 512d, regular sector size
-            int read = ds.Read(sector, 0, sector.Length);
-            if (read == sector.Length && Encoding.ASCII.GetString(sector, 0, 8) != GPTSignature)
-            {
-                read = ds.Read(sector, 0, sector.Length);
-            }
+            byte[] GPTBuffer = new byte[0x100 * SectorSize];
+            _ = stream.Read(GPTBuffer, 0, 0x100 * (int)SectorSize);
 
-            if (read == sector.Length && Encoding.ASCII.GetString(sector, 0, 8) == GPTSignature)
-            {
-                uint partitionSlotCount = BitConverter.ToUInt32(sector, 0x50); // partition count from header
-                uint partitionSlotSize = BitConverter.ToUInt32(sector, 0x54); // partition size from header
-                int bytesToRead = (int)Math.Round(partitionSlotCount * partitionSlotSize / (double)sector.Length,
-                                      MidpointRounding.AwayFromZero) * sector.Length;
-                partitionArray = new byte[bytesToRead];
-                _ = ds.Read(partitionArray, 0, partitionArray.Length);
-            }
+            GPT GPT = new(GPTBuffer, SectorSize);
 
-            _ = ds.Seek(0, SeekOrigin.Begin);
-
-            if (partitionArray == null)
-            {
-                Console.WriteLine("Failed to read partition array");
-                throw new Exception("Failed to read partition array");
-            }
-
-            List<GPTPartition> partitionarray = new();
-
-            using (BinaryReader br = new(new MemoryStream(partitionArray)))
-            {
-                byte[] name = new byte[72]; // fixed name size
-                int iterator = 0;
-                while (true)
-                {
-                    Guid type = new(br.ReadBytes(16));
-                    if (type == Guid.Empty)
-                    {
-                        break;
-                    }
-
-                    _ = br.BaseStream.Seek(16, SeekOrigin.Current);
-                    ulong firstLBA = br.ReadUInt64();
-                    ulong lastLBA = br.ReadUInt64();
-                    _ = br.BaseStream.Seek(0x8, SeekOrigin.Current);
-                    name = br.ReadBytes(name.Length);
-                    iterator++;
-                    partitionarray.Add(new GPTPartition
-                    {
-                        Name = Encoding.Unicode.GetString(name).TrimEnd('\0'),
-                        FirstLBA = firstLBA * Constants.SectorSize,
-                        LastLBA = (lastLBA + 0) * Constants.SectorSize
-                    });
-                }
-            }
-
-            return partitionarray.ToArray();
-        }
-
-        internal class GPTPartition
-        {
-            public string Name
-            {
-                get; set;
-            }
-            public ulong FirstLBA
-            {
-                get; set;
-            }
-            public ulong LastLBA
-            {
-                get; set;
-            }
+            return GPT.Partitions;
         }
 
         public override void Close()
@@ -234,14 +167,14 @@ namespace DumpIt
             base.Close();
         }
 
-        private new void Dispose()
+        public new void Dispose()
         {
             Dispose(true);
             base.Dispose();
             GC.SuppressFinalize(this);
         }
-
-        private new void Dispose(bool disposing)
+        
+        protected new void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.
             if (!disposed)

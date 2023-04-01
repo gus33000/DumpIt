@@ -26,7 +26,7 @@ using System.IO;
 
 namespace DumpIt
 {
-    internal class PartialStream : Stream
+    internal class PartialStream : Stream, IDisposable
     {
         private Stream innerstream;
 
@@ -85,14 +85,14 @@ namespace DumpIt
             base.Close();
         }
 
-        private new void Dispose()
+        public new void Dispose()
         {
             Dispose(true);
             base.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        private new void Dispose(bool disposing)
+        protected new void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.
             if (!disposed)

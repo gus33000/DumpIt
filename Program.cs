@@ -136,7 +136,7 @@ namespace DumpIt
             SetupHelper.SetupContainers();
 
             Stream strm = GetStreamFromFilePath(ddfile, out ulong SectorSize);
-            Stream fstream = !Recovery ? new EPartitionStream(strm, partitions) : strm;
+            Stream fstream = !Recovery ? new EPartitionStream(strm, (uint)SectorSize, partitions) : strm;
 
             /*using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
 
@@ -162,10 +162,10 @@ namespace DumpIt
             pump.Run();
             Console.WriteLine();*/
 
-            EPartitionStream.GPTPartition[] parts = EPartitionStream.GetPartsFromGPT(fstream);
-            foreach (EPartitionStream.GPTPartition part in parts)
+            List<GPTPartition> parts = EPartitionStream.GetPartsFromGPT(fstream, (uint)SectorSize);
+            foreach (GPTPartition part in parts)
             {
-                Stream contentStream = new PartialStream(fstream, (long)part.FirstLBA, (long)part.LastLBA + (long)SectorSize);
+                Stream contentStream = new PartialStream(fstream, (long)part.FirstSector * SectorSize, (long)part.LastSector + (long)SectorSize);
 
                 using FileStream dst = File.Create(part.Name + ".img");
 
@@ -183,7 +183,7 @@ namespace DumpIt
                 DateTime now = DateTime.Now;
                 pump.ProgressEvent += (o, e) => { ShowProgress((ulong)e.BytesRead, (ulong)totalBytes, now); };
 
-                Logging.Log($"Dumping {part.Name} - {part.FirstLBA} - {part.LastLBA}");
+                Logging.Log($"Dumping {part.Name} - {part.FirstSector} - {part.LastSector}");
                 pump.Run();
                 Logging.Log("");
             }

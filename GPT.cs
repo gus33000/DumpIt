@@ -27,6 +27,7 @@ namespace DumpIt
     public class GPT
     {
         private byte[] GPTBuffer;
+        private readonly uint SectorSize;
         private readonly uint HeaderOffset;
         private readonly uint HeaderSize;
         private uint TableOffset;
@@ -37,11 +38,12 @@ namespace DumpIt
         internal ulong LastUsableSector;
         internal bool HasChanged = false;
 
-        public List<Partition> Partitions = new();
+        public List<GPTPartition> Partitions = new();
 
-        internal GPT(byte[] GPTBuffer)
+        internal GPT(byte[] GPTBuffer, uint SectorSize)
         {
             this.GPTBuffer = GPTBuffer;
+            this.SectorSize = SectorSize;
             uint? TempHeaderOffset = ByteOperations.FindAscii(GPTBuffer, "EFI PART");
             if (TempHeaderOffset == null)
             {
@@ -50,7 +52,7 @@ namespace DumpIt
 
             HeaderOffset = (uint)TempHeaderOffset;
             HeaderSize = ByteOperations.ReadUInt32(GPTBuffer, HeaderOffset + 0x0C);
-            TableOffset = HeaderOffset + (int)Constants.SectorSize;
+            TableOffset = HeaderOffset + SectorSize;
             FirstUsableSector = ByteOperations.ReadUInt64(GPTBuffer, HeaderOffset + 0x28);
             LastUsableSector = ByteOperations.ReadUInt64(GPTBuffer, HeaderOffset + 0x30);
             MaxPartitions = ByteOperations.ReadUInt32(GPTBuffer, HeaderOffset + 0x50);
@@ -71,7 +73,7 @@ namespace DumpIt
                     break;
                 }
 
-                Partition CurrentPartition = new()
+                GPTPartition CurrentPartition = new()
                 {
                     Name = Name,
                     FirstSector = ByteOperations.ReadUInt64(GPTBuffer, PartitionOffset + 0x20),
@@ -87,7 +89,7 @@ namespace DumpIt
             HasChanged = false;
         }
 
-        internal Partition GetPartition(string Name)
+        internal GPTPartition GetPartition(string Name)
         {
             return Partitions.Where(p => string.Compare(p.Name, Name, true) == 0).FirstOrDefault();
         }
@@ -96,7 +98,7 @@ namespace DumpIt
         {
             if (GPTBuffer == null)
             {
-                TableSize = 33 * (int)Constants.SectorSize;
+                TableSize = 33 * SectorSize;
                 TableOffset = 0;
                 GPTBuffer = new byte[TableSize];
             }
@@ -106,7 +108,7 @@ namespace DumpIt
             }
 
             uint PartitionOffset = TableOffset;
-            foreach (Partition CurrentPartition in Partitions)
+            foreach (GPTPartition CurrentPartition in Partitions)
             {
                 ByteOperations.WriteGuid(GPTBuffer, PartitionOffset + 0x00, CurrentPartition.PartitionTypeGuid);
                 ByteOperations.WriteGuid(GPTBuffer, PartitionOffset + 0x10, CurrentPartition.PartitionGuid);
@@ -123,74 +125,6 @@ namespace DumpIt
             ByteOperations.WriteUInt32(GPTBuffer, HeaderOffset + 0x10, ByteOperations.CRC32(GPTBuffer, HeaderOffset, HeaderSize));
 
             return GPTBuffer;
-        }
-
-        public class Partition
-        {
-            private ulong _SizeInSectors;
-            private ulong _FirstSector;
-            private ulong _LastSector;
-
-            public string Name;            // 0x48
-            public Guid PartitionTypeGuid; // 0x10
-            public Guid PartitionGuid;     // 0x10
-            internal ulong Attributes;      // 0x08
-
-            internal ulong SizeInSectors
-            {
-                get => _SizeInSectors != 0 ? _SizeInSectors : LastSector - FirstSector + 1;
-                set
-                {
-                    _SizeInSectors = value;
-                    if (FirstSector != 0)
-                    {
-                        LastSector = FirstSector + _SizeInSectors - 1;
-                    }
-                }
-            }
-
-            internal ulong FirstSector // 0x08
-            {
-                get => _FirstSector;
-                set
-                {
-                    _FirstSector = value;
-                    if (_SizeInSectors != 0)
-                    {
-                        _LastSector = FirstSector + _SizeInSectors - 1;
-                    }
-                }
-            }
-
-            internal ulong LastSector // 0x08
-            {
-                get => _LastSector;
-                set
-                {
-                    _LastSector = value;
-                    _SizeInSectors = 0;
-                }
-            }
-
-            public string Volume => @"\\?\Volume" + PartitionGuid.ToString("b") + @"\";
-
-            public string FirstSectorAsString
-            {
-                get => "0x" + FirstSector.ToString("X16");
-                set => FirstSector = Convert.ToUInt64(value, 16);
-            }
-
-            public string LastSectorAsString
-            {
-                get => "0x" + LastSector.ToString("X16");
-                set => LastSector = Convert.ToUInt64(value, 16);
-            }
-
-            public string AttributesAsString
-            {
-                get => "0x" + Attributes.ToString("X16");
-                set => Attributes = Convert.ToUInt64(value, 16);
-            }
         }
     }
 }
