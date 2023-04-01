@@ -92,37 +92,27 @@ namespace DumpIt
             else
                 strm = new FileStream(ddfile, FileMode.Open);
 
-            Stream fstream;
-            if (!Recovery)
-                fstream = new EPartitionStream(strm, partitions);
-            else
-                fstream = strm;
-
-            using (var inDisk = new Disk(fstream, Ownership.Dispose))
+            EPartitionStream.GPTPartition[] parts = EPartitionStream.GetPartsFromGPT(strm);
+            foreach (EPartitionStream.GPTPartition part in parts)
             {
-                var diskParams = inDisk.Parameters;
-
-                using (var outDisk = VirtualDisk.CreateDisk("VHD", "dynamic", vhdfile, diskParams, "", ""))
+                Console.WriteLine(string.Concat(new string[]
                 {
-                    var contentStream = inDisk.Content;
-
-                    var pump = new StreamPump
+                    part.Name,
+                    " - ",
+                    part.FirstLBA.ToString(),
+                    " - ",
+                    part.LastLBA.ToString()
+                }));
+                strm.Seek((long)part.FirstLBA, SeekOrigin.Begin);
+                using (FileStream dst = File.Create(part.Name + ".img"))
+                {
+                    byte[] buffer = new byte[4096L];
+                    for (ulong i = part.FirstLBA; i <= part.LastLBA; i += 4096UL)
                     {
-                        InputStream = contentStream,
-                        OutputStream = outDisk.Content,
-                        SparseCopy = true,
-                        SparseChunkSize = SectorSize,
-                        BufferSize = SectorSize * 1024
-                    };
-
-                    var totalBytes = contentStream.Length;
-
-                    var now = DateTime.Now;
-                    pump.ProgressEvent += (o, e) => { ShowProgress(totalBytes, now, o, e); };
-
-                    Logging.Log("Converting RAW to VHD");
-                    pump.Run();
-                    Console.WriteLine();
+                        Console.Title = i.ToString() + "/" + part.LastLBA.ToString();
+                        strm.Read(buffer, 0, 4096);
+                        dst.Write(buffer, 0, 4096);
+                    }
                 }
             }
         }
