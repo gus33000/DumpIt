@@ -19,9 +19,9 @@
 // DEALINGS IN THE SOFTWARE.
 
 using CommandLine;
+using DiscUtils;
 using DiscUtils.Containers;
 using DiscUtils.Streams;
-using DiscUtils.Vhdx;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -112,6 +112,18 @@ namespace DumpIt
             }, errs => 1);
         }
 
+        public static Stream GetStreamFromFilePath(string ddfile)
+        {
+            Stream strm = ddfile.ToLower().Contains(@"\\.\physicaldrive")
+                ? new DeviceStream(ddfile)
+                : ddfile.ToLower().EndsWith(@".vhd", StringComparison.InvariantCultureIgnoreCase)
+                    ? new DiscUtils.Vhd.Disk(ddfile, FileAccess.Read).Content
+                    : ddfile.ToLower().EndsWith(@".vhdx", StringComparison.InvariantCultureIgnoreCase)
+                                ? new DiscUtils.Vhdx.Disk(ddfile, FileAccess.Read).Content
+                                : new FileStream(ddfile, FileMode.Open);
+            return strm;
+        }
+
         /// <summary>
         ///     Coverts a raw DD image into a VHD file suitable for FFU imaging.
         /// </summary>
@@ -121,12 +133,33 @@ namespace DumpIt
         public static void ConvertDD2VHD(string ddfile, string vhdfile, string[] partitions, bool Recovery, ulong SectorSize)
         {
             SetupHelper.SetupContainers();
-            Stream strm = ddfile.ToLower().Contains(@"\\.\physicaldrive") ? new DeviceStream(ddfile) : new FileStream(ddfile, FileMode.Open);
 
-            Disk inDisk = new(strm, Ownership.Dispose);
-            Stream contentStream = inDisk.Content;
+            Stream strm = GetStreamFromFilePath(ddfile);
+            Stream fstream = !Recovery ? new EPartitionStream(strm, partitions) : strm;
 
-            Stream fstream = !Recovery ? new EPartitionStream(contentStream, partitions) : contentStream;
+            /*using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
+
+            VirtualDiskParameters diskParams = inDisk.Parameters;
+            using VirtualDisk outDisk = VirtualDisk.CreateDisk("VHD", "dynamic", vhdfile, diskParams, "", "");
+            SparseStream contentStream = inDisk.Content;
+
+            StreamPump pump = new()
+            {
+                InputStream = contentStream,
+                OutputStream = outDisk.Content,
+                SparseCopy = true,
+                SparseChunkSize = (int)SectorSize,
+                BufferSize = (int)SectorSize * 1024
+            };
+
+            long totalBytes = contentStream.Length;
+
+            DateTime now = DateTime.Now;
+            pump.ProgressEvent += (o, e) => { ShowProgress((ulong)e.BytesRead, (ulong)totalBytes, now); };
+
+            Logging.Log("Converting RAW to VHD");
+            pump.Run();
+            Console.WriteLine();*/
 
             EPartitionStream.GPTPartition[] parts = EPartitionStream.GetPartsFromGPT(fstream);
             foreach (EPartitionStream.GPTPartition part in parts)
@@ -137,7 +170,7 @@ namespace DumpIt
 
                 using FileStream dst = File.Create(part.Name + ".img");
 
-                var now = DateTime.Now;
+                DateTime now = DateTime.Now;
 
                 byte[] buffer = new byte[SectorSize];
                 for (ulong i = part.FirstLBA; i <= part.LastLBA; i += SectorSize)
