@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace DumpIt
 {
@@ -39,7 +40,10 @@ namespace DumpIt
         {
             innerstream = stream;
             excluded = partitionstoexclude;
-            partitions = GetPartsFromGPT();
+            partitions = GetPartsFromGPT(this);
+
+            if (partitions.Any(x => x.Name == "IS_UNLOCKED"))
+                IS_UNLOCKED = true;
         }
 
         public override bool CanRead => innerstream.CanRead;
@@ -124,11 +128,10 @@ namespace DumpIt
             innerstream.Write(buffer, offset, count);
         }
 
-        private GPTPartition[] GetPartsFromGPT()
+        public static GPTPartition[] GetPartsFromGPT(Stream ds)
         {
             var GPTSignature = "EFI PART";
             byte[] partitionArray = null;
-            var ds = innerstream;
             ds.Seek(0, SeekOrigin.Begin);
             var sector = new byte[Constants.SectorSize]; // 512d, regular sector size
             var read = ds.Read(sector, 0, sector.Length);
@@ -144,7 +147,7 @@ namespace DumpIt
                 ds.Read(partitionArray, 0, partitionArray.Length);
             }
 
-            innerstream.Seek(0, SeekOrigin.Begin);
+            ds.Seek(0, SeekOrigin.Begin);
 
             if (partitionArray == null)
             {
@@ -175,8 +178,6 @@ namespace DumpIt
                         FirstLBA = firstLBA * Constants.SectorSize,
                         LastLBA = (lastLBA + 0) * Constants.SectorSize
                     });
-                    if (Encoding.Unicode.GetString(name).TrimEnd('\0') == "IS_UNLOCKED")
-                        IS_UNLOCKED = true;
                 }
             }
 
