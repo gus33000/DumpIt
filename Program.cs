@@ -165,7 +165,7 @@ namespace DumpIt
             List<GPTPartition> parts = EPartitionStream.GetPartsFromGPT(fstream, (uint)SectorSize);
             foreach (GPTPartition part in parts)
             {
-                Stream contentStream = new PartialStream(fstream, (long)part.FirstSector * SectorSize, (long)part.LastSector + (long)SectorSize);
+                Stream contentStream = new PartialStream(fstream, (long)(part.FirstSector * SectorSize), (long)(part.LastSector * SectorSize) + (long)SectorSize);
 
                 using FileStream dst = File.Create(part.Name + ".img");
 

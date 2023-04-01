@@ -44,11 +44,7 @@ namespace DumpIt
         {
             this.GPTBuffer = GPTBuffer;
             this.SectorSize = SectorSize;
-            uint? TempHeaderOffset = ByteOperations.FindAscii(GPTBuffer, "EFI PART");
-            if (TempHeaderOffset == null)
-            {
-                throw new Exception("Bad GPT");
-            }
+            uint? TempHeaderOffset = ByteOperations.FindAscii(GPTBuffer, "EFI PART") ?? throw new Exception("Bad GPT");
 
             HeaderOffset = (uint)TempHeaderOffset;
             HeaderSize = ByteOperations.ReadUInt32(GPTBuffer, HeaderOffset + 0x0C);
