@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using CommandLine;
+using System;
 
 namespace DumpIt
 {
@@ -37,9 +38,8 @@ namespace DumpIt
             get; set;
         }
 
-        [Option('e', "exclude-list", Required = false,
-            HelpText = "Path to an optional partition exclude text list to use instead of the builtin one.")]
-        public string Excludelist
+        [Option('e', "excluded-file", HelpText = "A path to the file with all partitions to exclude", Required = false, Default = ".\\provisioning-partitions.txt")]
+        public string ExcludedFile
         {
             get; set;
         }

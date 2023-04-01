@@ -19,7 +19,6 @@
 // DEALINGS IN THE SOFTWARE.
 
 using CommandLine;
-using DiscUtils;
 using DiscUtils.Containers;
 using DiscUtils.Streams;
 using System;
@@ -73,32 +72,12 @@ namespace DumpIt
 
         private static void ParseDumpOptions(Options o)
         {
-            if (!string.IsNullOrEmpty(o.Excludelist) && File.Exists(o.Excludelist))
+            if (!string.IsNullOrEmpty(o.ExcludedFile) && File.Exists(o.ExcludedFile))
             {
-                partitions = new List<string>(File.ReadAllLines(o.Excludelist)).ToArray();
+                partitions = new List<string>(File.ReadAllLines(o.ExcludedFile)).ToArray();
             }
 
-            ulong eMMCDumpSize;
-            ulong SectorSize = Constants.SectorSize;
-
-            if (o.ImgFile.ToLower().Contains(@"\\.\physicaldrive"))
-            {
-                Logging.Log("Tool is running in Device Dump mode.");
-                Logging.Log("Gathering disk geometry...");
-                eMMCDumpSize = (ulong)GetDiskSize.GetDiskLength(@"\\.\PhysicalDrive" + o.ImgFile.ToLower().Replace(@"\\.\physicaldrive", ""));
-                SectorSize = (ulong)GetDiskSize.GetDiskSectorSize(@"\\.\PhysicalDrive" + o.ImgFile.ToLower().Replace(@"\\.\physicaldrive", ""));
-            }
-            else
-            {
-                Logging.Log("Tool is running in Image Dump mode.");
-                Logging.Log("Gathering disk image geometry...");
-                eMMCDumpSize = (ulong)new FileInfo(o.ImgFile).Length;
-            }
-
-            Logging.Log("Reported source device eMMC size is: " + eMMCDumpSize + " bytes - " + (eMMCDumpSize / 1024 / 1024) + "MB - " + (eMMCDumpSize / 1024 / 1024 / 1024) + "GB.");
-            Logging.Log("Selected " + SectorSize + "B for the sector size");
-
-            ConvertDD2VHD(o.ImgFile, o.VhdFile, partitions, o.Recovery, SectorSize);
+            ConvertDD2VHD(o.ImgFile, o.VhdFile, partitions, o.Recovery);
         }
 
         private static int Main(string[] args)
@@ -112,15 +91,37 @@ namespace DumpIt
             }, errs => 1);
         }
 
-        public static Stream GetStreamFromFilePath(string ddfile)
+        public static Stream GetStreamFromFilePath(string ddfile, out ulong SectorSize)
         {
-            Stream strm = ddfile.ToLower().Contains(@"\\.\physicaldrive")
-                ? new DeviceStream(ddfile)
-                : ddfile.ToLower().EndsWith(@".vhd", StringComparison.InvariantCultureIgnoreCase)
-                    ? new DiscUtils.Vhd.Disk(ddfile, FileAccess.Read).Content
-                    : ddfile.ToLower().EndsWith(@".vhdx", StringComparison.InvariantCultureIgnoreCase)
-                                ? new DiscUtils.Vhdx.Disk(ddfile, FileAccess.Read).Content
-                                : new FileStream(ddfile, FileMode.Open);
+            Stream strm;
+            SectorSize = Constants.SectorSize;
+
+            if (ddfile.ToLower().Contains(@"\\.\PhysicalDrive"))
+            {
+                DeviceStream dstrm = new(ddfile, FileAccess.Read);
+
+                SectorSize = dstrm.SectorSize;
+                strm = dstrm;
+            }
+            else if (ddfile.ToLower().EndsWith(".vhd", StringComparison.InvariantCultureIgnoreCase))
+            {
+                DiscUtils.Vhd.Disk disk = new(ddfile, FileAccess.Read);
+
+                SectorSize = (ulong)disk.SectorSize;
+                strm = disk.Content;
+            }
+            else if (ddfile.ToLower().EndsWith(".vhdx", StringComparison.InvariantCultureIgnoreCase))
+            {
+                DiscUtils.Vhdx.Disk disk = new(ddfile, FileAccess.Read);
+
+                SectorSize = (ulong)disk.SectorSize;
+                strm = disk.Content;
+            }
+            else
+            {
+                strm = new FileStream(ddfile, FileMode.Open);
+            }
+
             return strm;
         }
 
@@ -130,11 +131,11 @@ namespace DumpIt
         /// <param name="ddfile">The path to the DD file.</param>
         /// <param name="vhdfile">The path to the output VHD file.</param>
         /// <returns></returns>
-        public static void ConvertDD2VHD(string ddfile, string vhdfile, string[] partitions, bool Recovery, ulong SectorSize)
+        public static void ConvertDD2VHD(string ddfile, string vhdfile, string[] partitions, bool Recovery)
         {
             SetupHelper.SetupContainers();
 
-            Stream strm = GetStreamFromFilePath(ddfile);
+            Stream strm = GetStreamFromFilePath(ddfile, out ulong SectorSize);
             Stream fstream = !Recovery ? new EPartitionStream(strm, partitions) : strm;
 
             /*using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
@@ -164,21 +165,27 @@ namespace DumpIt
             EPartitionStream.GPTPartition[] parts = EPartitionStream.GetPartsFromGPT(fstream);
             foreach (EPartitionStream.GPTPartition part in parts)
             {
-                Logging.Log($"{part.Name} - {part.FirstLBA} - {part.LastLBA}");
-
-                _ = fstream.Seek((long)part.FirstLBA, SeekOrigin.Begin);
+                Stream contentStream = new PartialStream(fstream, (long)part.FirstLBA, (long)part.LastLBA + (long)SectorSize);
 
                 using FileStream dst = File.Create(part.Name + ".img");
 
-                DateTime now = DateTime.Now;
-
-                byte[] buffer = new byte[SectorSize];
-                for (ulong i = part.FirstLBA; i <= part.LastLBA; i += SectorSize)
+                StreamPump pump = new()
                 {
-                    ShowProgress(i, part.LastLBA, now);
-                    _ = fstream.Read(buffer, 0, (int)SectorSize);
-                    dst.Write(buffer, 0, (int)SectorSize);
-                }
+                    InputStream = contentStream,
+                    OutputStream = dst,
+                    SparseCopy = true,
+                    SparseChunkSize = (int)SectorSize,
+                    BufferSize = (int)SectorSize * 1024
+                };
+
+                long totalBytes = contentStream.Length;
+
+                DateTime now = DateTime.Now;
+                pump.ProgressEvent += (o, e) => { ShowProgress((ulong)e.BytesRead, (ulong)totalBytes, now); };
+
+                Logging.Log($"Dumping {part.Name} - {part.FirstLBA} - {part.LastLBA}");
+                pump.Run();
+                Logging.Log("");
             }
         }
 
@@ -193,10 +200,8 @@ namespace DumpIt
             double speed = Math.Round(readBytes / 1024L / 1024L / timeSoFar.TotalSeconds);
 
             Logging.Log(
-                string.Format("{0} {1}MB/s {2:hh\\:mm\\:ss\\.f}", GetDismLikeProgBar((int)(readBytes * 100 / totalBytes)), speed.ToString(),
-                    remaining, remaining.TotalHours, remaining.Minutes, remaining.Seconds, remaining.Milliseconds),
+                $"{GetDismLikeProgBar((int)(readBytes * 100 / totalBytes))} {speed}MB/s {remaining:hh\\:mm\\:ss\\.f}",
                 returnline: false);
-
         }
 
         private static string GetDismLikeProgBar(int perc)
