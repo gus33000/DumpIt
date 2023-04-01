@@ -18,46 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using CommandLine;
+
 namespace DumpIt
 {
-    internal class Constants
+    [Verb("request-dump", isDefault: true, HelpText = "")]
+    internal class Options
     {
-        internal const ulong SectorSize = 0x1000;
-
-        internal static readonly string[] partitions = new string[]
+        [Option('i', "img-file", HelpText = @"A path to the img file to convert *OR* a PhysicalDisk path. i.e. \\.\PhysicalDrive1", Required = true)]
+        public string ImgFile
         {
-            "DPP",
-            "MODEM_FSG",
-            "MODEM_FS1",
-            "MODEM_FS2",
-            "MODEM_FSC",
-            "DDR",
-            "SEC",
-            "APDP",
-            "MSADP",
-            "DPO",
-            "SSD",
-            "UEFI_BS_NV",
-            "UEFI_NV",
-            "UEFI_RT_NV",
-            "UEFI_RT_NV_RPMB",
-            "BOOTMODE",
-            "LIMITS",
-            "BACKUP_BS_NV",
-            "BACKUP_SBL1",
-            "BACKUP_SBL2",
-            "BACKUP_SBL3",
-            "BACKUP_PMIC",
-            "BACKUP_DBI",
-            "BACKUP_UEFI",
-            "BACKUP_RPM",
-            "BACKUP_QSEE",
-            "BACKUP_QHEE",
-            "BACKUP_TZ",
-            "BACKUP_HYP",
-            "BACKUP_WINSECAPP",
-            "BACKUP_TZAPPS",
-            "SVRawDump"
-        };
+            get; set;
+        }
+
+        [Option('v', "vhd-file", HelpText = "A path to the VHD file to output", Required = true)]
+        public string VhdFile
+        {
+            get; set;
+        }
+
+        [Option('e', "exclude-list", Required = false,
+            HelpText = "Path to an optional partition exclude text list to use instead of the builtin one.")]
+        public string Excludelist
+        {
+            get; set;
+        }
+
+        [Option('r', "enable-recoveryvhd", Required = false, HelpText = "Generates a recovery vhd with no partition skipped. Useful for clean state restore for a SPECIFIC unique device.", Default = false)]
+        public bool Recovery
+        {
+            get; set;
+        }
     }
 }

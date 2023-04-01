@@ -31,7 +31,7 @@ namespace DumpIt
             Error
         }
 
-        private static readonly object lockObj = new object();
+        private static readonly object lockObj = new();
 
         public static void Log(string message, LoggingLevel severity = LoggingLevel.Information, bool returnline = true)
         {
@@ -43,7 +43,7 @@ namespace DumpIt
                     return;
                 }
 
-                var msg = "";
+                string msg = "";
 
                 switch (severity)
                 {
@@ -62,9 +62,13 @@ namespace DumpIt
                 }
 
                 if (returnline)
+                {
                     Console.WriteLine(DateTime.Now.ToString("'['HH':'mm':'ss']'") + "[" + msg + "] " + message);
+                }
                 else
+                {
                     Console.Write("\r" + DateTime.Now.ToString("'['HH':'mm':'ss']'") + "[" + msg + "] " + message);
+                }
 
                 Console.ForegroundColor = ConsoleColor.White;
             }
