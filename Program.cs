@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using CommandLine;
+using DiscUtils;
 using DiscUtils.Containers;
 using DiscUtils.Streams;
 using System;
@@ -138,7 +139,7 @@ namespace DumpIt
             Stream strm = GetStreamFromFilePath(ddfile, out ulong SectorSize);
             Stream fstream = !Recovery ? new EPartitionStream(strm, (uint)SectorSize, partitions) : strm;
 
-            /*using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
+            using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
 
             VirtualDiskParameters diskParams = inDisk.Parameters;
             using VirtualDisk outDisk = VirtualDisk.CreateDisk("VHD", "dynamic", vhdfile, diskParams, "", "");
@@ -160,9 +161,9 @@ namespace DumpIt
 
             Logging.Log("Converting RAW to VHD");
             pump.Run();
-            Console.WriteLine();*/
+            Console.WriteLine();
 
-            List<GPTPartition> parts = EPartitionStream.GetPartsFromGPT(fstream, (uint)SectorSize);
+            /*List<GPTPartition> parts = EPartitionStream.GetPartsFromGPT(fstream, (uint)SectorSize);
             foreach (GPTPartition part in parts)
             {
                 Stream contentStream = new PartialStream(fstream, (long)(part.FirstSector * SectorSize), (long)(part.LastSector * SectorSize) + (long)SectorSize);
@@ -186,7 +187,7 @@ namespace DumpIt
                 Logging.Log($"Dumping {part.Name} - {part.FirstSector} - {part.LastSector}");
                 pump.Run();
                 Logging.Log("");
-            }
+            }*/
         }
 
         protected static void ShowProgress(ulong readBytes, ulong totalBytes, DateTime startTime)
