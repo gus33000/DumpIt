@@ -151,7 +151,7 @@ namespace DumpIt
                 InputStream = contentStream,
                 OutputStream = outDisk.Content,
                 SparseCopy = true,
-                SparseChunkSize = 4096,
+                SparseChunkSize = (int)SectorSize,
                 BufferSize = (int)SectorSize * 1024
             };
 
