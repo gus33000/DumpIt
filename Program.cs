@@ -53,11 +53,11 @@ namespace DumpIt
             }
             catch (Exception ex)
             {
-                Logging.Log("Something happened.", Logging.LoggingLevel.Error);
+                Logging.Log("Something happened.", LoggingLevel.Error);
                 while (ex != null)
                 {
-                    Logging.Log(ex.Message, Logging.LoggingLevel.Error);
-                    Logging.Log(ex.StackTrace, Logging.LoggingLevel.Error);
+                    Logging.Log(ex.Message, LoggingLevel.Error);
+                    Logging.Log(ex.StackTrace, LoggingLevel.Error);
                     ex = ex.InnerException;
                 }
                 if (Debugger.IsAttached)
@@ -78,7 +78,7 @@ namespace DumpIt
                 partitions = new List<string>(File.ReadAllLines(o.ExcludedFile)).ToArray();
             }
 
-            ConvertDD2VHD(o.ImgFile, o.VhdFile, partitions, o.Recovery);
+            ConvertDD2VHD(o.ImgFile, o.VhdxFile, partitions, o.Recovery);
         }
 
         private static int Main(string[] args)
@@ -97,12 +97,12 @@ namespace DumpIt
             Stream strm;
             SectorSize = Constants.SectorSize;
 
-            if (ddfile.ToLower().Contains(@"\\.\PhysicalDrive"))
+            if (ddfile.Contains(@"\\.\PhysicalDrive", StringComparison.CurrentCultureIgnoreCase))
             {
-                DeviceStream dstrm = new(ddfile, FileAccess.Read);
+                DeviceStream deviceStream = new(ddfile, FileAccess.Read);
 
-                SectorSize = dstrm.SectorSize;
-                strm = dstrm;
+                SectorSize = deviceStream.SectorSize;
+                strm = deviceStream;
             }
             else if (ddfile.ToLower().EndsWith(".vhd", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -136,13 +136,14 @@ namespace DumpIt
         {
             SetupHelper.SetupContainers();
 
-            Stream strm = GetStreamFromFilePath(ddfile, out ulong SectorSize);
-            Stream fstream = !Recovery ? new EPartitionStream(strm, (uint)SectorSize, partitions) : strm;
+            Stream stream = GetStreamFromFilePath(ddfile, out ulong SectorSize);
+            Stream inputStream = !Recovery ? new EPartitionStream(stream, (uint)SectorSize, partitions) : stream;
 
-            using DiscUtils.Raw.Disk inDisk = new(fstream, Ownership.Dispose);
+            using DiscUtils.Raw.Disk inDisk = new(inputStream, Ownership.Dispose);
 
-            VirtualDiskParameters diskParams = inDisk.Parameters;
-            using VirtualDisk outDisk = VirtualDisk.CreateDisk("VHD", "dynamic", vhdfile, diskParams, "", "");
+            long diskCapacity = inputStream.Length;
+            using Stream fs = new FileStream(vhdfile, FileMode.CreateNew, FileAccess.ReadWrite);
+            using DiscUtils.Vhdx.Disk outDisk = DiscUtils.Vhdx.Disk.InitializeDynamic(fs, Ownership.None, diskCapacity, Geometry.FromCapacity(diskCapacity, (int)SectorSize));
             SparseStream contentStream = inDisk.Content;
 
             StreamPump pump = new()
@@ -150,7 +151,7 @@ namespace DumpIt
                 InputStream = contentStream,
                 OutputStream = outDisk.Content,
                 SparseCopy = true,
-                SparseChunkSize = (int)SectorSize,
+                SparseChunkSize = 4096,
                 BufferSize = (int)SectorSize * 1024
             };
 
@@ -159,35 +160,9 @@ namespace DumpIt
             DateTime now = DateTime.Now;
             pump.ProgressEvent += (o, e) => { ShowProgress((ulong)e.BytesRead, (ulong)totalBytes, now); };
 
-            Logging.Log("Converting RAW to VHD");
+            Logging.Log("Converting RAW to VHDX");
             pump.Run();
             Console.WriteLine();
-
-            /*List<GPTPartition> parts = EPartitionStream.GetPartsFromGPT(fstream, (uint)SectorSize);
-            foreach (GPTPartition part in parts)
-            {
-                Stream contentStream = new PartialStream(fstream, (long)(part.FirstSector * SectorSize), (long)(part.LastSector * SectorSize) + (long)SectorSize);
-
-                using FileStream dst = File.Create(part.Name + ".img");
-
-                StreamPump pump = new()
-                {
-                    InputStream = contentStream,
-                    OutputStream = dst,
-                    SparseCopy = true,
-                    SparseChunkSize = (int)SectorSize,
-                    BufferSize = (int)SectorSize * 1024
-                };
-
-                long totalBytes = contentStream.Length;
-
-                DateTime now = DateTime.Now;
-                pump.ProgressEvent += (o, e) => { ShowProgress((ulong)e.BytesRead, (ulong)totalBytes, now); };
-
-                Logging.Log($"Dumping {part.Name} - {part.FirstSector} - {part.LastSector}");
-                pump.Run();
-                Logging.Log("");
-            }*/
         }
 
         protected static void ShowProgress(ulong readBytes, ulong totalBytes, DateTime startTime)
@@ -201,11 +176,11 @@ namespace DumpIt
             double speed = Math.Round(readBytes / 1024L / 1024L / timeSoFar.TotalSeconds);
 
             Logging.Log(
-                $"{GetDismLikeProgBar((int)(readBytes * 100 / totalBytes))} {speed}MB/s {remaining:hh\\:mm\\:ss\\.f}",
+                $"{GetDISMLikeProgBar((int)(readBytes * 100 / totalBytes))} {speed}MB/s {remaining:hh\\:mm\\:ss\\.f}",
                 returnline: false);
         }
 
-        private static string GetDismLikeProgBar(int perc)
+        private static string GetDISMLikeProgBar(int perc)
         {
             int eqsLength = (int)((double)perc / 100 * 55);
             string bases = new string('=', eqsLength) + new string(' ', 55 - eqsLength);

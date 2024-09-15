@@ -38,7 +38,7 @@ namespace DumpIt
         internal ulong LastUsableSector;
         internal bool HasChanged = false;
 
-        public List<GPTPartition> Partitions = new();
+        public List<GPTPartition> Partitions = [];
 
         internal GPT(byte[] GPTBuffer, uint SectorSize)
         {
@@ -63,7 +63,7 @@ namespace DumpIt
 
             while (PartitionOffset < TableOffset + TableSize)
             {
-                string Name = ByteOperations.ReadUnicodeString(GPTBuffer, PartitionOffset + 0x38, 0x48).TrimEnd(new char[] { (char)0, ' ' });
+                string Name = ByteOperations.ReadUnicodeString(GPTBuffer, PartitionOffset + 0x38, 0x48).TrimEnd([(char)0, ' ']);
                 if (Name.Length == 0)
                 {
                     break;

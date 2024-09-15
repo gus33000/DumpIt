@@ -31,8 +31,8 @@ namespace DumpIt
             get; set;
         }
 
-        [Option('v', "vhd-file", HelpText = "A path to the VHD file to output", Required = true)]
-        public string VhdFile
+        [Option('v', "vhdx-file", HelpText = "A path to the VHDX file to output", Required = true)]
+        public string VhdxFile
         {
             get; set;
         }

@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>AnyCPU;ARM64</Platforms>
+    <Platforms>x86;x64;ARM32;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="DiscUtils.Containers" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Core" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Dmg" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Net" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.OpticalDiscSharing" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Streams" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Vhd" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Vhdx" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Vmdk" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Wim" Version="0.16.13" />
-    <PackageReference Include="DiscUtils.Xva" Version="0.16.13" />
+    <PackageReference Include="LTRData.DiscUtils.Containers" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Core" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Dmg" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Iso9660" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Net" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.OpticalDiscSharing" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Streams" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Vhd" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Vhdx" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Vmdk" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Wim" Version="1.0.47" />
+    <PackageReference Include="LTRData.DiscUtils.Xva" Version="1.0.47" />
   </ItemGroup>
 </Project>

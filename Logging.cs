@@ -27,13 +27,6 @@ namespace DumpIt
 {
     internal class Logging
     {
-        public enum LoggingLevel
-        {
-            Information,
-            Warning,
-            Error
-        }
-
         private static readonly object lockObj = new();
 
         public static void Log(string message, LoggingLevel severity = LoggingLevel.Information, bool returnline = true)
@@ -66,11 +59,11 @@ namespace DumpIt
 
                 if (returnline)
                 {
-                    Console.WriteLine(DateTime.Now.ToString("'['HH':'mm':'ss']'") + "[" + msg + "] " + message);
+                    Console.WriteLine($"{DateTime.Now:'['HH':'mm':'ss']'}[{msg}] {message}");
                 }
                 else
                 {
-                    Console.Write("\r" + DateTime.Now.ToString("'['HH':'mm':'ss']'") + "[" + msg + "] " + message);
+                    Console.Write($"\r{DateTime.Now:'['HH':'mm':'ss']'}[{msg}] {message}");
                 }
 
                 Console.ForegroundColor = ConsoleColor.White;

@@ -76,7 +76,7 @@ namespace DumpIt
                 }
 
                 // The partition is excluded.
-                if (excluded.Any(x => x.ToLower() == partition.Name.ToLower()))
+                if (excluded.Any(x => x.Equals(partition.Name, StringComparison.CurrentCultureIgnoreCase)))
                 {
                     if (readingend < (partition.FirstSector * SectorSize))
                     {

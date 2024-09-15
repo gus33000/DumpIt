@@ -24,8 +24,8 @@ namespace DumpIt
     {
         internal const ulong SectorSize = 0x1000;
 
-        internal static readonly string[] partitions = new string[]
-        {
+        internal static readonly string[] partitions =
+        [
             "DPP",
             "MODEM_FSG",
             "MODEM_FS1",
@@ -58,6 +58,6 @@ namespace DumpIt
             "BACKUP_WINSECAPP",
             "BACKUP_TZAPPS",
             "SVRawDump"
-        };
+        ];
     }
 }

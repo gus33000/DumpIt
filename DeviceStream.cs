@@ -279,8 +279,7 @@ namespace DumpIt
         public override void WriteByte(byte Byte)
         {
             int BytesWritten = 0;
-            byte[] lpBuffer = new byte[1];
-            lpBuffer[0] = Byte;
+            byte[] lpBuffer = [Byte];
             if (!WriteFile(
             handleValue.DangerousGetHandle(),                        // handle to file
             lpBuffer,                                                // data buffer

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [win-x86,win-x64,win-arm64]
+        include:
+          - target: win-x86
+            platform: win
+            architecture: x86
+          - target: win-x64
+            platform: win
+            architecture: x64
+          - target: win-arm64
+            platform: win
+            architecture: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Utilities
+        shell: pwsh
+        run: |
+          msbuild /m /t:restore,dumpit:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release /p:IncludeNativeLibrariesForSelfExtract=true DumpIt.sln
+
+      - name: Create PDB Output Directory
+        shell: pwsh
+        run: |
+          mkdir ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}-symbols
+
+      - name: Move PDBs
+        shell: pwsh
+        run: |
+          move ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}\*.pdb ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}-symbols
+
+      - name: Upload artifact (Binaries)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.architecture }}-binaries
+          path: ${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }}
+
+      - name: Upload artifact (Symbols)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.architecture }}-symbols
+          path: ${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }}-symbols
