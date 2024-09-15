@@ -21,14 +21,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-using System;
-using System.IO;
-
 namespace DumpIt
 {
     internal class PartialStream : Stream, IDisposable
     {
-        private Stream innerstream;
+        private Stream? innerstream;
 
         private bool disposed;
         private readonly long start;

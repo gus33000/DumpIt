@@ -18,16 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 namespace DumpIt
 {
     internal class EPartitionStream : Stream, IDisposable
     {
-        private Stream innerstream;
+        private Stream? innerstream;
         private readonly string[] excluded;
         private readonly List<GPTPartition> partitions;
         private readonly bool IS_UNLOCKED = false;
@@ -173,7 +168,7 @@ namespace DumpIt
             base.Dispose();
             GC.SuppressFinalize(this);
         }
-        
+
         protected new void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.

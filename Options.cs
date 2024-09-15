@@ -26,19 +26,19 @@ namespace DumpIt
     internal class Options
     {
         [Option('i', "img-file", HelpText = @"A path to the img file to convert *OR* a PhysicalDisk path. i.e. \\.\PhysicalDrive1", Required = true)]
-        public string ImgFile
+        public required string ImgFile
         {
             get; set;
         }
 
         [Option('v', "vhdx-file", HelpText = "A path to the VHDX file to output", Required = true)]
-        public string VhdxFile
+        public required string VhdxFile
         {
             get; set;
         }
 
         [Option('e', "excluded-file", HelpText = "A path to the file with all partitions to exclude", Required = false, Default = ".\\provisioning-partitions.txt")]
-        public string ExcludedFile
+        public required string ExcludedFile
         {
             get; set;
         }

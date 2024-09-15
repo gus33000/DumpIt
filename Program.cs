@@ -22,10 +22,7 @@ using CommandLine;
 using DiscUtils;
 using DiscUtils.Containers;
 using DiscUtils.Streams;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace DumpIt
@@ -176,25 +173,8 @@ namespace DumpIt
             double speed = Math.Round(readBytes / 1024L / 1024L / timeSoFar.TotalSeconds);
 
             Logging.Log(
-                $"{GetDISMLikeProgBar((int)(readBytes * 100 / totalBytes))} {speed}MB/s {remaining:hh\\:mm\\:ss\\.f}",
-                returnline: false);
-        }
-
-        private static string GetDISMLikeProgBar(int perc)
-        {
-            int eqsLength = (int)((double)perc / 100 * 55);
-            string bases = new string('=', eqsLength) + new string(' ', 55 - eqsLength);
-            bases = bases.Insert(28, perc + "%");
-            if (perc == 100)
-            {
-                bases = bases[1..];
-            }
-            else if (perc < 10)
-            {
-                bases = bases.Insert(28, " ");
-            }
-
-            return "[" + bases + "]";
+                $"{Logging.GetDISMLikeProgressBar((uint)(readBytes * 100 / totalBytes))} {speed}MB/s {remaining:hh\\:mm\\:ss\\.f}",
+                returnLine: false);
         }
     }
 }

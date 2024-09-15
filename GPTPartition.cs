@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System;
-
 namespace DumpIt
 {
     public class GPTPartition
@@ -28,7 +26,7 @@ namespace DumpIt
         private ulong _FirstSector;
         private ulong _LastSector;
 
-        public string Name;            // 0x48
+        public required string Name;            // 0x48
         public Guid PartitionTypeGuid; // 0x10
         public Guid PartitionGuid;     // 0x10
         internal ulong Attributes;      // 0x08

@@ -20,9 +20,6 @@
 
 // These functions assume same endianness for the CPU architecture and the raw data it reads from or writes to.
 
-using System;
-using System.IO;
-
 namespace DumpIt
 {
     internal static class ByteOperations
@@ -162,7 +159,7 @@ namespace DumpIt
             return ((Offset - Base) % Alignment) == 0 ? Offset : ((((Offset - Base) / Alignment) + 1) * Alignment) + Base;
         }
 
-        internal static uint? FindPatternInFile(string FileName, byte[] Pattern, byte[] Mask, out byte[] OutPattern)
+        internal static uint? FindPatternInFile(string FileName, byte[] Pattern, byte[] Mask, out byte[]? OutPattern)
         {
             // The mask is optional.
             // In the mask 0x00 means the value must match, and 0xFF means that this position is a wildcard.
@@ -245,7 +242,7 @@ namespace DumpIt
             return FindPattern(SourceBuffer, BitConverter.GetBytes(Pattern), null, null);
         }
 
-        internal static uint? FindPattern(byte[] SourceBuffer, byte[] Pattern, byte[] Mask, byte[] OutPattern)
+        internal static uint? FindPattern(byte[] SourceBuffer, byte[] Pattern, byte[]? Mask, byte[]? OutPattern)
         {
             return FindPattern(SourceBuffer, 0, null, Pattern, Mask, OutPattern);
         }

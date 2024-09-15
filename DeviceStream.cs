@@ -23,10 +23,7 @@ SOFTWARE.
 
 */
 using Microsoft.Win32.SafeHandles;
-using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace DumpIt
@@ -121,7 +118,7 @@ namespace DumpIt
         [return: MarshalAs(UnmanagedType.Bool)]
         private static partial bool SetFilePointerEx(SafeFileHandle hFile, long liDistanceToMove, out long lpNewFilePointer, uint dwMoveMethod);
 
-        private SafeFileHandle handleValue = null;
+        private SafeFileHandle? handleValue = null;
         private long _Position = 0;
         private readonly long _length = 0;
         private readonly bool _canWrite = false;
