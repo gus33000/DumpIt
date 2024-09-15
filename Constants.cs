@@ -22,7 +22,7 @@ namespace DumpIt
 {
     internal class Constants
     {
-        internal const ulong SectorSize = 0x1000;
+        internal const ulong SectorSize = 0x200;//0x1000;
 
         internal static readonly string[] partitions =
         [
