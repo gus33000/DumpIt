@@ -101,7 +101,7 @@ namespace DumpIt
         }
 
         [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-        private static partial IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+        private static partial IntPtr CreateFileW(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -161,7 +161,7 @@ namespace DumpIt
 
             (_length, SectorSize) = GetDiskProperties(devicePath);
 
-            IntPtr ptr = CreateFile(devicePath, fileAccess, 0, IntPtr.Zero, OPEN_EXISTING, FILE_ATTRIBUTE_DEVICE | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH, IntPtr.Zero);
+            IntPtr ptr = CreateFileW(devicePath, fileAccess, 0, IntPtr.Zero, OPEN_EXISTING, FILE_ATTRIBUTE_DEVICE | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH, IntPtr.Zero);
             handleValue = new SafeFileHandle(ptr, true);
 
             if (handleValue.IsInvalid)
@@ -397,7 +397,7 @@ namespace DumpIt
 
         private static void Execute<T>(ref T x, uint dwIoControlCode, string lpFileName, uint dwDesiredAccess = GENERIC_READ, uint dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ, IntPtr lpSecurityAttributes = default, uint dwCreationDisposition = OPEN_EXISTING, uint dwFlagsAndAttributes = 0, IntPtr hTemplateFile = default)
         {
-            nint hDevice = CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+            nint hDevice = CreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 
             SafeFileHandle handleValue = new(hDevice, true);
 
